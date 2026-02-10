@@ -1,74 +1,142 @@
 # AviationAgent
 
-An intelligent aviation information agent built on Azure AI Foundry that leverages the AviationStack API to provide real-time and historical flight data, airline information, airport details, and more.
+An intelligent aviation information agent built on Azure AI Foundry that leverages the AviationStack API to provide real-time flight data through a simple web application.
 
 ## Overview
 
-AviationAgent is an AI-powered agent designed to deliver comprehensive aviation information through natural language interactions. Built on Microsoft's Azure AI Foundry platform, this agent provides a conversational interface to access global aviation data powered by the AviationStack API.
-
-## Purpose
-
-This agent enables users to:
-- Track real-time flight status and locations
-- Access historical flight data
-- Query airline and airport information
-- Look up flight schedules and timetables
-- Search for airline routes
-- Get detailed information about aircraft
+AviationAgent is an AI-powered agent designed to deliver comprehensive aviation information through natural language interactions. Built on Microsoft's Azure AI Foundry platform with Azure OpenAI, this agent provides a conversational interface to access global aviation data powered by the AviationStack API.
 
 ## Features
 
-### Powered by AviationStack API
+- 🤖 **AI-Powered Conversations**: Natural language interface using Azure OpenAI (GPT-4)
+- ✈️ **Real-Time Flight Data**: Access live flight information via AviationStack API
+- 🌐 **Simple Web Interface**: Clean, intuitive chat-based UI
+- 🔐 **Secure Authentication**: Azure Service Principal support
+- 🆓 **Free Tier Compatible**: Works with free tiers of both services
 
-The agent utilizes the AviationStack API, which provides:
-- **Real-Time Flight Tracking**: Live flight status updates with 30-60 second delays
-- **Historical Flight Data**: Access to flight information from the past three months
-- **Airline Information**: Details on over 13,000 airlines worldwide
-- **Airport Database**: Information on more than 10,000 airports globally
-- **Aircraft Data**: Access to data on 19,000+ aircraft
-- **Flight Schedules**: Current and future flight timetables
-- **Airline Routes**: Direct route information and connections
-
-### Built on Azure AI Foundry
-
-Leveraging Azure AI Foundry Agent Service capabilities:
-- Secure enterprise-grade infrastructure
-- Multi-model AI support
-- Identity and access management
-- Scalable cloud deployment
-- Robust observability and monitoring
-
-## Free Tier Limitations
-
-This project is designed to work with the AviationStack free tier plan, which includes:
-- Limited number of API requests per month
-- Access to core API endpoints
-- Basic aviation data features
-
-Note: Some advanced features may require a paid subscription. Check [AviationStack pricing](https://aviationstack.com/product) for details.
-
-## Getting Started
+## Quick Start
 
 ### Prerequisites
-- Azure AI Foundry account
-- AviationStack API key (free tier)
+- Python 3.8+
+- Azure AI Foundry account with Azure OpenAI
+- AviationStack API key (free tier available)
 
-### API Documentation
-- [AviationStack API Documentation](https://aviationstack.com/documentation)
-- [Azure AI Foundry Documentation](https://learn.microsoft.com/en-us/azure/ai-foundry/)
+### Installation
 
-## Use Cases
+1. **Clone the repository**
+```bash
+git clone https://github.com/superfluousIT/AviationAgent.git
+cd AviationAgent
+```
 
-This agent can be integrated into various applications:
-- Travel and booking platforms
-- Flight tracking applications
-- Airport information systems
-- Travel planning tools
-- Logistics and operations dashboards
-- Customer service chatbots for airlines
+2. **Install dependencies**
+```bash
+pip install -r requirements.txt
+```
+
+3. **Configure environment variables**
+```bash
+cp .env.example .env
+# Edit .env with your credentials
+```
+
+4. **Run the application**
+```bash
+python app.py
+```
+
+5. **Open your browser**
+```
+http://localhost:5000
+```
+
+## Configuration
+
+The application requires the following environment variables in your `.env` file:
+
+### Azure Credentials
+- `AZURE_OPENAI_ENDPOINT` - Your Azure OpenAI endpoint
+- `AZURE_OPENAI_API_KEY` - Azure OpenAI API key
+- `AZURE_OPENAI_DEPLOYMENT_NAME` - Model deployment name (e.g., gpt-4)
+
+### Service Principal (Optional)
+- `AZURE_TENANT_ID` - Azure tenant ID
+- `AZURE_CLIENT_ID` - Service principal client ID
+- `AZURE_CLIENT_SECRET` - Service principal secret
+
+### AviationStack API
+- `AVIATIONSTACK_API_KEY` - Your AviationStack API key
+
+See `.env.example` for a complete template.
+
+## Usage Examples
+
+Once running, try asking:
+- "Show me flights from JFK to LAX"
+- "What's the status of flight AA100?"
+- "Find American Airlines flights"
+- "Show me active flights from London Heathrow"
+
+## Project Structure
+
+```
+AviationAgent/
+├── app.py                 # Flask web application
+├── aviation_agent.py      # AI agent with Azure OpenAI integration
+├── aviation_client.py     # AviationStack API client
+├── templates/
+│   └── index.html        # Web interface
+├── requirements.txt       # Python dependencies
+├── .env.example          # Environment template
+├── SETUP.md              # Detailed setup guide
+└── README.md             # This file
+```
+
+## Documentation
+
+- **[SETUP.md](SETUP.md)** - Detailed setup instructions, credential configuration, and deployment guide
+- **[AviationStack API](https://aviationstack.com/documentation)** - API documentation
+- **[Azure AI Foundry](https://learn.microsoft.com/en-us/azure/ai-foundry/)** - Azure AI documentation
 
 ## Technology Stack
 
-- **Platform**: Azure AI Foundry Agent Service
+- **Backend**: Python with Flask
+- **AI Platform**: Azure OpenAI (GPT-4)
+- **Authentication**: Azure Service Principal
 - **API Provider**: AviationStack
-- **Data Coverage**: 250+ countries worldwide
+- **Frontend**: HTML/CSS/JavaScript
+
+## Current Implementation (v1.0)
+
+This first version focuses on the **flights API** only, providing:
+- Real-time flight status and tracking
+- Flight search by number, airline, or route
+- Departure and arrival information
+- Natural language query processing
+
+## Free Tier Limitations
+
+### AviationStack Free Tier
+- 100 API requests per month
+- Access to flights endpoint only
+- Real-time and historical data
+
+### Azure OpenAI
+- Pay-as-you-go pricing
+- Consider using GPT-3.5-turbo for lower costs
+
+## Security
+
+⚠️ **Important**: Never commit credentials to version control!
+
+- `.env` files are excluded via `.gitignore`
+- Use Azure Key Vault for production
+- Rotate credentials regularly
+
+## Support
+
+For detailed setup instructions, troubleshooting, and deployment guides, see **[SETUP.md](SETUP.md)**.
+
+## License
+
+This project is provided as-is for educational and development purposes.
