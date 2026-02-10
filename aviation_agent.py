@@ -1,167 +1,77 @@
 """
-Azure AI Agent for Aviation Information
+Azure AI Foundry Agent for Aviation Information
 
-This module implements an AI agent using Azure OpenAI that can interact with
+This module implements an AI agent using Azure AI Foundry Agent Service that can interact with
 the AviationStack API to provide flight information.
 """
 
 import os
 import json
 from typing import Dict, Any, List, Optional
-from openai import AzureOpenAI
 from azure.identity import ClientSecretCredential, DefaultAzureCredential
+from azure.ai.projects import AIProjectClient
+from azure.ai.agents.models import FunctionTool, ToolSet, AgentThreadCreationOptions, ThreadMessageOptions
 from aviation_client import AviationStackClient
 
 
+# Module-level aviation client for use by tool functions
+_aviation_client = None
+
+
+def get_aviation_client() -> AviationStackClient:
+    """Get or create the aviation client singleton."""
+    global _aviation_client
+    if _aviation_client is None:
+        _aviation_client = AviationStackClient()
+    return _aviation_client
+
+
+def get_flight_information(
+    flight_iata: Optional[str] = None,
+    airline_iata: Optional[str] = None,
+    dep_iata: Optional[str] = None,
+    arr_iata: Optional[str] = None,
+    flight_status: Optional[str] = None,
+    limit: int = 10
+) -> str:
+    """
+    Get real-time or historical flight information from the AviationStack API.
+    Can search by flight number, airline, airports, or status.
+    
+    :param flight_iata: Flight IATA code (e.g., 'AA100', 'BA456')
+    :param airline_iata: Airline IATA code (e.g., 'AA' for American Airlines)
+    :param dep_iata: Departure airport IATA code (e.g., 'JFK', 'LAX')
+    :param arr_iata: Arrival airport IATA code (e.g., 'JFK', 'LAX')
+    :param flight_status: Flight status filter (scheduled, active, landed, cancelled, incident, diverted)
+    :param limit: Maximum number of results to return (default: 10, max: 100)
+    :return: JSON string with flight information
+    """
+    client = get_aviation_client()
+    
+    # Build kwargs, excluding None values
+    kwargs = {}
+    if flight_iata:
+        kwargs['flight_iata'] = flight_iata
+    if airline_iata:
+        kwargs['airline_iata'] = airline_iata
+    if dep_iata:
+        kwargs['dep_iata'] = dep_iata
+    if arr_iata:
+        kwargs['arr_iata'] = arr_iata
+    if flight_status:
+        kwargs['flight_status'] = flight_status
+    if limit:
+        kwargs['limit'] = limit
+    
+    result = client.get_flights(**kwargs)
+    return json.dumps(result)
+
+
 class AviationAgent:
-    """AI Agent for handling aviation-related queries."""
+    """AI Agent for handling aviation-related queries using Azure AI Foundry."""
     
-    def __init__(self):
-        """Initialize the Aviation Agent with Azure OpenAI and AviationStack clients."""
-        # Initialize AviationStack client
-        self.aviation_client = AviationStackClient()
-        
-        # Initialize Azure OpenAI client
-        self.client = self._initialize_azure_client()
-        self.deployment_name = os.getenv('AZURE_OPENAI_DEPLOYMENT_NAME', 'gpt-4')
-        
-        # Define available tools for the agent
-        self.tools = self._define_tools()
-        
-        # Store conversation history
-        self.messages = []
-    
-    def _initialize_azure_client(self) -> AzureOpenAI:
-        """
-        Initialize Azure OpenAI client with service principal authentication.
-        
-        Returns:
-            Configured AzureOpenAI client
-        """
-        endpoint = os.getenv('AZURE_OPENAI_ENDPOINT')
-        api_key = os.getenv('AZURE_OPENAI_API_KEY')
-        
-        if not endpoint:
-            raise ValueError("AZURE_OPENAI_ENDPOINT is required")
-        
-        # Use API key if provided, otherwise fall back to managed identity
-        if api_key:
-            client = AzureOpenAI(
-                azure_endpoint=endpoint,
-                api_key=api_key,
-                api_version="2024-02-15-preview"
-            )
-        else:
-            # Use service principal credentials
-            tenant_id = os.getenv('AZURE_TENANT_ID')
-            client_id = os.getenv('AZURE_CLIENT_ID')
-            client_secret = os.getenv('AZURE_CLIENT_SECRET')
-            
-            if all([tenant_id, client_id, client_secret]):
-                credential = ClientSecretCredential(
-                    tenant_id=tenant_id,
-                    client_id=client_id,
-                    client_secret=client_secret
-                )
-                token = credential.get_token("https://cognitiveservices.azure.com/.default")
-                
-                client = AzureOpenAI(
-                    azure_endpoint=endpoint,
-                    azure_ad_token=token.token,
-                    api_version="2024-02-15-preview"
-                )
-            else:
-                raise ValueError("Either AZURE_OPENAI_API_KEY or service principal credentials are required")
-        
-        return client
-    
-    def _define_tools(self) -> List[Dict[str, Any]]:
-        """
-        Define the tools (functions) available to the AI agent.
-        
-        Returns:
-            List of tool definitions in OpenAI format
-        """
-        return [
-            {
-                "type": "function",
-                "function": {
-                    "name": "get_flight_information",
-                    "description": "Get real-time or historical flight information from the AviationStack API. Can search by flight number, airline, airports, or status.",
-                    "parameters": {
-                        "type": "object",
-                        "properties": {
-                            "flight_iata": {
-                                "type": "string",
-                                "description": "Flight IATA code (e.g., 'AA100', 'BA456')"
-                            },
-                            "airline_iata": {
-                                "type": "string",
-                                "description": "Airline IATA code (e.g., 'AA' for American Airlines, 'BA' for British Airways)"
-                            },
-                            "dep_iata": {
-                                "type": "string",
-                                "description": "Departure airport IATA code (e.g., 'JFK', 'LAX', 'LHR')"
-                            },
-                            "arr_iata": {
-                                "type": "string",
-                                "description": "Arrival airport IATA code (e.g., 'JFK', 'LAX', 'LHR')"
-                            },
-                            "flight_status": {
-                                "type": "string",
-                                "description": "Flight status filter",
-                                "enum": ["scheduled", "active", "landed", "cancelled", "incident", "diverted"]
-                            },
-                            "limit": {
-                                "type": "integer",
-                                "description": "Maximum number of results to return (default: 10, max: 100)",
-                                "default": 10
-                            }
-                        },
-                        "required": []
-                    }
-                }
-            }
-        ]
-    
-    def _execute_tool(self, tool_name: str, arguments: Dict[str, Any]) -> str:
-        """
-        Execute a tool (function call) and return the result.
-        
-        Args:
-            tool_name: Name of the tool to execute
-            arguments: Arguments for the tool
-            
-        Returns:
-            JSON string of the result
-        """
-        if tool_name == "get_flight_information":
-            result = self.aviation_client.get_flights(**arguments)
-            return json.dumps(result)
-        else:
-            return json.dumps({"error": f"Unknown tool: {tool_name}"})
-    
-    def chat(self, user_message: str) -> str:
-        """
-        Process a user message and return the agent's response.
-        
-        Args:
-            user_message: The user's message/query
-            
-        Returns:
-            The agent's response
-        """
-        # Add user message to conversation history
-        self.messages.append({
-            "role": "user",
-            "content": user_message
-        })
-        
-        # System message for the agent
-        if len(self.messages) == 1:
-            self.messages.insert(0, {
-                "role": "system",
-                "content": """You are an aviation information assistant powered by the AviationStack API. 
+    AGENT_NAME = "AviationAssistant"
+    AGENT_INSTRUCTIONS = """You are an aviation information assistant powered by the AviationStack API. 
 You can help users find real-time and historical flight information, including:
 - Flight status and tracking
 - Departure and arrival information
@@ -174,65 +84,155 @@ If airport or airline codes are mentioned, use them to search. Common codes incl
 - Airports: JFK (New York), LAX (Los Angeles), LHR (London), CDG (Paris), DXB (Dubai)
 - Airlines: AA (American), BA (British Airways), DL (Delta), UA (United), LH (Lufthansa)
 """
-            })
+    
+    def __init__(self):
+        """Initialize the Aviation Agent with Azure AI Foundry project client."""
+        # Initialize AI Project client
+        self.project_client = self._initialize_project_client()
         
+        # Get model deployment name
+        self.model_name = os.getenv('AZURE_AI_MODEL_DEPLOYMENT_NAME', 'gpt-4o')
+        
+        # Create toolset with function tools
+        self.toolset = self._create_toolset()
+        
+        # Enable auto function calls on the agents client
+        self.project_client.agents.enable_auto_function_calls(tools=self.toolset)
+        
+        # Create or get the agent
+        self.agent = self._get_or_create_agent()
+        
+        # Store current thread for conversation continuity
+        self.current_thread_id = None
+    
+    def _initialize_project_client(self) -> AIProjectClient:
+        """
+        Initialize Azure AI Foundry project client with service principal authentication.
+        
+        Returns:
+            Configured AIProjectClient
+        """
+        endpoint = os.getenv('AZURE_AI_PROJECT_ENDPOINT')
+        
+        if not endpoint:
+            raise ValueError("AZURE_AI_PROJECT_ENDPOINT is required")
+        
+        # Use service principal credentials
+        tenant_id = os.getenv('AZURE_TENANT_ID')
+        client_id = os.getenv('AZURE_CLIENT_ID')
+        client_secret = os.getenv('AZURE_CLIENT_SECRET')
+        
+        if all([tenant_id, client_id, client_secret]):
+            credential = ClientSecretCredential(
+                tenant_id=tenant_id,
+                client_id=client_id,
+                client_secret=client_secret
+            )
+        else:
+            # Fall back to default credential (managed identity, etc.)
+            credential = DefaultAzureCredential()
+        
+        return AIProjectClient(
+            endpoint=endpoint,
+            credential=credential
+        )
+    
+    def _create_toolset(self) -> ToolSet:
+        """
+        Create a toolset with the available function tools.
+        
+        Returns:
+            Configured ToolSet
+        """
+        toolset = ToolSet()
+        
+        # Create function tool with the flight information function
+        function_tool = FunctionTool(functions={get_flight_information})
+        toolset.add(function_tool)
+        
+        return toolset
+    
+    def _get_or_create_agent(self):
+        """
+        Get existing agent or create a new one in Azure AI Foundry.
+        
+        Returns:
+            The agent object
+        """
+        agents_client = self.project_client.agents
+        
+        # Try to find existing agent by name
+        existing_agents = agents_client.list_agents()
+        for agent in existing_agents:
+            if agent.name == self.AGENT_NAME:
+                # Update the agent with latest configuration
+                return agents_client.update_agent(
+                    agent_id=agent.id,
+                    model=self.model_name,
+                    instructions=self.AGENT_INSTRUCTIONS,
+                    tools=self.toolset.get_definitions_and_resources().get("tools", [])
+                )
+        
+        # Create new agent
+        return agents_client.create_agent(
+            model=self.model_name,
+            name=self.AGENT_NAME,
+            instructions=self.AGENT_INSTRUCTIONS,
+            toolset=self.toolset
+        )
+    
+    def chat(self, user_message: str) -> str:
+        """
+        Process a user message and return the agent's response.
+        
+        Args:
+            user_message: The user's message/query
+            
+        Returns:
+            The agent's response
+        """
         try:
-            # Make initial API call
-            response = self.client.chat.completions.create(
-                model=self.deployment_name,
-                messages=self.messages,
-                tools=self.tools,
-                tool_choice="auto"
+            agents_client = self.project_client.agents
+            
+            # Create thread options with the user message
+            thread_options = AgentThreadCreationOptions(
+                messages=[
+                    ThreadMessageOptions(
+                        role="user",
+                        content=user_message
+                    )
+                ]
             )
             
-            response_message = response.choices[0].message
+            # Run the agent - this handles tool execution automatically
+            run = agents_client.create_thread_and_process_run(
+                agent_id=self.agent.id,
+                thread=thread_options,
+                toolset=self.toolset
+            )
             
-            # Check if the model wants to call a function
-            if response_message.tool_calls:
-                # Add assistant's message to conversation
-                self.messages.append(response_message)
-                
-                # Execute each tool call
-                for tool_call in response_message.tool_calls:
-                    function_name = tool_call.function.name
-                    function_args = json.loads(tool_call.function.arguments)
-                    
-                    # Execute the function
-                    function_response = self._execute_tool(function_name, function_args)
-                    
-                    # Add function response to conversation
-                    self.messages.append({
-                        "role": "tool",
-                        "tool_call_id": tool_call.id,
-                        "content": function_response
-                    })
-                
-                # Get final response from the model
-                second_response = self.client.chat.completions.create(
-                    model=self.deployment_name,
-                    messages=self.messages
-                )
-                
-                final_message = second_response.choices[0].message.content
-            else:
-                final_message = response_message.content
+            # Store thread ID for potential future use
+            self.current_thread_id = run.thread_id
             
-            # Add assistant's response to conversation history
-            self.messages.append({
-                "role": "assistant",
-                "content": final_message
-            })
+            # Check run status
+            if run.status == "failed":
+                error_msg = run.last_error.message if run.last_error else "Unknown error"
+                return f"Error processing request: {error_msg}"
             
-            return final_message
+            # Get the assistant's response
+            response_content = agents_client.messages.get_last_message_text_by_role(
+                thread_id=run.thread_id,
+                role="assistant"
+            )
+            
+            # Extract text value from MessageTextContent object
+            if response_content and response_content.text:
+                return response_content.text.value
+            return "No response generated."
             
         except Exception as e:
-            error_message = f"Error processing request: {str(e)}"
-            self.messages.append({
-                "role": "assistant",
-                "content": error_message
-            })
-            return error_message
+            return f"Error processing request: {str(e)}"
     
     def reset_conversation(self):
-        """Reset the conversation history."""
-        self.messages = []
+        """Reset the conversation by clearing the current thread."""
+        self.current_thread_id = None
