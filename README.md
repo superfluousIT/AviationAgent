@@ -71,4 +71,4 @@ This agent can be integrated into various applications:
 
 - **Platform**: Azure AI Foundry Agent Service
 - **API Provider**: AviationStack
-- **Data Coverage**: 250+ countries worldwide 
+- **Data Coverage**: 250+ countries worldwide
