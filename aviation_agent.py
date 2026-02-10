@@ -218,16 +218,10 @@ If airport or airline codes are mentioned, use them to search. Common codes incl
                 final_message = response_message.content
             
             # Add assistant's response to conversation history
-            if not response_message.tool_calls:
-                self.messages.append({
-                    "role": "assistant",
-                    "content": final_message
-                })
-            else:
-                self.messages.append({
-                    "role": "assistant",
-                    "content": final_message
-                })
+            self.messages.append({
+                "role": "assistant",
+                "content": final_message
+            })
             
             return final_message
             
