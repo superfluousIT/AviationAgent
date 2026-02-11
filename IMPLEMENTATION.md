@@ -6,7 +6,7 @@ This implementation provides a complete, production-ready Aviation Agent web app
 ## Requirements Fulfilled
 
 ### ✅ Core Requirements
-1. **Aviation Agent Implementation**: Fully functional AI agent using Azure OpenAI with GPT-4
+1. **Aviation Agent Implementation**: Fully functional AI agent using Azure AI Agents SDK
 2. **Simple Web Application**: Clean, intuitive chat interface with Flask backend
 3. **Service Principal Support**: Azure authentication via service principal or API key
 4. **Environment Configuration**: Proper `.env` setup for Azure and AviationStack credentials
@@ -19,7 +19,7 @@ This implementation provides a complete, production-ready Aviation Agent web app
 ```
 AviationAgent/
 ├── app.py                  # Flask web application (entry point)
-├── aviation_agent.py       # Azure OpenAI AI agent
+├── aviation_agent.py       # Azure AI Agents SDK agent
 ├── aviation_client.py      # AviationStack API client
 ├── templates/
 │   └── index.html         # Web UI (chat interface)
@@ -41,11 +41,11 @@ AviationAgent/
 - Serves web UI at `/`
 
 ### 2. AI Agent (aviation_agent.py)
-- Azure OpenAI integration (GPT-4)
-- Function calling for flight queries
+- Azure AI Projects SDK v2 (`AIProjectClient` from `azure.ai.projects`)
+- OpenAI Responses API with agent references
 - Service principal authentication
-- Conversation history management
-- Tool execution (get_flight_information)
+- Response-chain conversation management
+- FunctionTool definitions with manual tool-call dispatch
 
 ### 3. API Client (aviation_client.py)
 - AviationStack flights endpoint integration
@@ -66,12 +66,11 @@ AviationAgent/
 Create a `.env` file with these variables (use `.env.example` as template):
 
 ```env
-# Azure OpenAI (Required)
-AZURE_OPENAI_ENDPOINT=https://your-endpoint.openai.azure.com/
-AZURE_OPENAI_API_KEY=your-api-key-here
-AZURE_OPENAI_DEPLOYMENT_NAME=gpt-4
+# Azure AI Agents (Required)
+AZURE_AI_PROJECT_ENDPOINT=https://your-ai-services-account.services.ai.azure.com/api/projects/your-project-name
+AZURE_AI_MODEL_DEPLOYMENT_NAME=gpt-4o
 
-# OR Azure Service Principal (Alternative authentication)
+# Azure Service Principal (Recommended)
 AZURE_TENANT_ID=your-tenant-id
 AZURE_CLIENT_ID=your-client-id
 AZURE_CLIENT_SECRET=your-secret
@@ -170,12 +169,12 @@ Health check endpoint
 
 **Optimization**: Default limit=10 results per query
 
-### Azure OpenAI
+### Azure AI
 - Pay-as-you-go pricing
 - ~$0.03 per 1K tokens (GPT-4)
-- Function calling overhead
+- Function tool overhead
 
-**Tip**: Use GPT-3.5-turbo for lower costs
+**Tip**: Use lower-cost model deployments for development
 
 ## Testing
 
@@ -227,7 +226,7 @@ docker run -p 8000:8000 --env-file .env aviation-agent
 | Component | Technology |
 |-----------|------------|
 | Backend | Python 3.8+ with Flask |
-| AI Platform | Azure OpenAI (GPT-4) |
+| AI Platform | Azure AI Projects SDK v2 (`azure-ai-projects`) |
 | Authentication | Azure Service Principal |
 | API Provider | AviationStack |
 | Frontend | HTML/CSS/JavaScript |
@@ -252,7 +251,7 @@ For issues or questions:
 1. Check **SETUP.md** for detailed setup instructions
 2. Review **ARCHITECTURE.md** for system design
 3. Visit [AviationStack Docs](https://aviationstack.com/documentation)
-4. Visit [Azure OpenAI Docs](https://learn.microsoft.com/en-us/azure/ai-services/openai/)
+4. Visit [Azure AI Agents Docs](https://learn.microsoft.com/en-us/azure/ai-services/agents/)
 5. Open an issue in the repository
 
 ## Verification Checklist
@@ -264,7 +263,7 @@ For issues or questions:
 ✅ Credentials not committed  
 ✅ Python modules import successfully  
 ✅ Flask routes configured  
-✅ Azure OpenAI integration complete  
+✅ Azure AI Agents integration complete  
 ✅ AviationStack client implemented  
 ✅ Web UI functional  
 ✅ Documentation comprehensive  

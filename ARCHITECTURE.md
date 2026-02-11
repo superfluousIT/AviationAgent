@@ -30,7 +30,7 @@ This document describes the architecture and design of the Aviation Agent applic
 │   (aviation_agent.py)       │
 ├─────────────────────────────┤
 │  - Conversation management  │
-│  - Azure OpenAI integration │
+│  - Azure AI Agents SDK      │
 │  - Function calling         │
 │  - Tool execution           │
 └──────┬──────────────────────┘
@@ -38,10 +38,10 @@ This document describes the architecture and design of the Aviation Agent applic
        ├──────────────┬────────────────┐
        ▼              ▼                ▼
 ┌─────────────┐ ┌──────────┐ ┌─────────────────┐
-│  Azure      │ │ Aviation │ │ Session         │
-│  OpenAI     │ │ Client   │ │ Management      │
-│             │ │          │ │                 │
-│ GPT-4       │ │ Flights  │ │ Per-user agents │
+│  Azure AI   │ │ Aviation │ │ Session         │
+│  Projects   │ │ Client   │ │ Management      │
+│  SDK v2     │ │          │ │                 │
+│ Responses   │ │ Flights  │ │ Per-user agents │
 │ Function    │ │ API      │ │ Conversation    │
 │ Calling     │ │          │ │ History         │
 └─────────────┘ └────┬─────┘ └─────────────────┘
@@ -75,30 +75,34 @@ This document describes the architecture and design of the Aviation Agent applic
 
 ### 2. Aviation Agent (aviation_agent.py)
 
-**Purpose**: AI agent orchestrator using Azure OpenAI
+**Purpose**: AI agent orchestrator using Azure AI Projects SDK v2 with the OpenAI Responses API
 
 **Key Features**:
-- Azure OpenAI integration with function calling
+- Azure AI Foundry new Agents API (not classic/assistants)
+- OpenAI Responses API for multi-turn conversations
 - Service principal authentication support
-- Conversation history management
-- Tool/function execution
+- Manual function calling with tool-call loop
 
-**Function Calling**:
-The agent uses OpenAI's function calling feature to decide when to fetch flight data:
+**Function Tools**:
+The agent registers FunctionTool definitions with the agent, then handles tool calls manually:
 
 ```python
-tools = [{
-    "type": "function",
-    "function": {
-        "name": "get_flight_information",
-        "parameters": { ... }
-    }
-}]
+from azure.ai.projects.models import FunctionTool, PromptAgentDefinition, AgentReference
+
+# Tools defined in agent definition
+definition = PromptAgentDefinition(model=model, instructions=..., tools=[function_tool])
+agent = project_client.agents.create(name=..., definition=definition)
+
+# Chat uses OpenAI Responses API with agent reference
+response = openai_client.responses.create(
+    input=user_message, model=model,
+    extra_body={"agent": AgentReference(name=agent.name).as_dict()}
+)
 ```
 
 **Authentication Flow**:
-1. Try API key authentication first (simpler)
-2. Fall back to service principal if configured
+1. Try service principal credentials if configured
+2. Fall back to DefaultAzureCredential (managed identity, etc.)
 3. Use ClientSecretCredential for token acquisition
 
 ### 3. Aviation Client (aviation_client.py)
@@ -146,19 +150,18 @@ tools = [{
    - Passes message to agent
 
 4. **Aviation Agent**:
-   - Adds message to conversation history
-   - Calls Azure OpenAI API
-   - Model decides to use `get_flight_information` function
+   - Calls OpenAI Responses API with agent reference
+   - Model decides to use `get_flight_information` function tool
 
-5. **Function Execution**:
-   - Agent calls `aviation_client.get_flights(dep_iata='JFK', arr_iata='LAX')`
-   - Client makes HTTP request to AviationStack API
-   - Returns JSON response
+5. **Function Execution** (manual tool-call loop):
+   - Agent detects `function_call` items in response output
+   - Executes `aviation_client.get_flights(dep_iata='JFK', arr_iata='LAX')`
+   - Sends tool outputs back via follow-up `responses.create()`
 
 6. **Response Generation**:
-   - Function result added to conversation
-   - Second OpenAI call to generate natural language response
-   - Response formatted for user
+   - Function results processed by the model
+   - Agent generates natural language response
+   - Text extracted from `response.output_text`
 
 7. **Frontend Display**:
    - Receives response
@@ -189,12 +192,11 @@ tools = [{
 ### Required Environment Variables
 
 ```env
-# Azure OpenAI (Required)
-AZURE_OPENAI_ENDPOINT=https://your-endpoint.openai.azure.com/
-AZURE_OPENAI_API_KEY=your-key-here
-AZURE_OPENAI_DEPLOYMENT_NAME=gpt-4
+# Azure AI Agents (Required)
+AZURE_AI_PROJECT_ENDPOINT=https://your-ai-services-account.services.ai.azure.com/api/projects/your-project-name
+AZURE_AI_MODEL_DEPLOYMENT_NAME=gpt-4o
 
-# OR Azure Service Principal (Alternative)
+# Azure Service Principal (Recommended)
 AZURE_TENANT_ID=your-tenant-id
 AZURE_CLIENT_ID=your-client-id
 AZURE_CLIENT_SECRET=your-secret
@@ -290,7 +292,7 @@ FLASK_DEBUG=True
 ### Recommended Metrics
 - API response times
 - AviationStack API usage
-- OpenAI token usage
+- Agent token usage
 - Error rates
 - User sessions
 - Query patterns
@@ -309,10 +311,10 @@ FLASK_DEBUG=True
 - No rate limit per second
 - Flights endpoint only
 
-### Azure OpenAI
+### Azure AI
 - Model-dependent limits
 - Token-based pricing
-- Function call overhead
+- Function tool overhead
 
 ### Best Practices
 - Cache repeated queries

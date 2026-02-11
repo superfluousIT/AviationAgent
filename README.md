@@ -4,11 +4,11 @@ An intelligent aviation information agent built on Azure AI Foundry that leverag
 
 ## Overview
 
-AviationAgent is an AI-powered agent designed to deliver comprehensive aviation information through natural language interactions. Built on Microsoft's Azure AI Foundry platform with Azure OpenAI, this agent provides a conversational interface to access global aviation data powered by the AviationStack API.
+AviationAgent is an AI-powered agent designed to deliver comprehensive aviation information through natural language interactions. Built on the Azure AI Agents SDK (new Agents API), this agent provides a conversational interface to access global aviation data powered by the AviationStack API.
 
 ## Features
 
-- 🤖 **AI-Powered Conversations**: Natural language interface using Azure OpenAI (GPT-4)
+- 🤖 **AI-Powered Conversations**: Natural language interface using the Azure AI Agents SDK
 - ✈️ **Real-Time Flight Data**: Access live flight information via AviationStack API
 - 🌐 **Simple Web Interface**: Clean, intuitive chat-based UI
 - 🔐 **Secure Authentication**: Azure Service Principal support
@@ -18,7 +18,7 @@ AviationAgent is an AI-powered agent designed to deliver comprehensive aviation 
 
 ### Prerequisites
 - Python 3.8+
-- Azure AI Foundry account with Azure OpenAI
+- Azure AI Foundry account with a project endpoint
 - AviationStack API key (free tier available)
 
 ### Installation
@@ -54,12 +54,11 @@ http://localhost:5000
 
 The application requires the following environment variables in your `.env` file:
 
-### Azure Credentials
-- `AZURE_OPENAI_ENDPOINT` - Your Azure OpenAI endpoint
-- `AZURE_OPENAI_API_KEY` - Azure OpenAI API key
-- `AZURE_OPENAI_DEPLOYMENT_NAME` - Model deployment name (e.g., gpt-4)
+### Azure AI Agents
+- `AZURE_AI_PROJECT_ENDPOINT` - Your Azure AI project endpoint
+- `AZURE_AI_MODEL_DEPLOYMENT_NAME` - Model deployment name (e.g., gpt-4o)
 
-### Service Principal (Optional)
+### Service Principal (Recommended)
 - `AZURE_TENANT_ID` - Azure tenant ID
 - `AZURE_CLIENT_ID` - Service principal client ID
 - `AZURE_CLIENT_SECRET` - Service principal secret
@@ -82,7 +81,7 @@ Once running, try asking:
 ```
 AviationAgent/
 ├── app.py                 # Flask web application
-├── aviation_agent.py      # AI agent with Azure OpenAI integration
+├── aviation_agent.py      # AI agent using Azure AI Agents SDK
 ├── aviation_client.py     # AviationStack API client
 ├── templates/
 │   └── index.html        # Web interface
@@ -101,7 +100,7 @@ AviationAgent/
 ## Technology Stack
 
 - **Backend**: Python with Flask
-- **AI Platform**: Azure OpenAI (GPT-4)
+- **AI Platform**: Azure AI Projects SDK v2 (`azure-ai-projects`)
 - **Authentication**: Azure Service Principal
 - **API Provider**: AviationStack
 - **Frontend**: HTML/CSS/JavaScript
@@ -121,9 +120,9 @@ This first version focuses on the **flights API** only, providing:
 - Access to flights endpoint only
 - Real-time and historical data
 
-### Azure OpenAI
+### Azure AI
 - Pay-as-you-go pricing
-- Consider using GPT-3.5-turbo for lower costs
+- Consider using lower-cost model deployments
 
 ## Security
 

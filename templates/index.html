@@ -88,6 +88,58 @@
             border-bottom-left-radius: 4px;
         }
 
+        /* Markdown styling in messages */
+        .message.assistant .message-content h1,
+        .message.assistant .message-content h2,
+        .message.assistant .message-content h3 {
+            margin-top: 12px;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .message.assistant .message-content h1:first-child,
+        .message.assistant .message-content h2:first-child,
+        .message.assistant .message-content h3:first-child {
+            margin-top: 0;
+        }
+
+        .message.assistant .message-content h3 {
+            font-size: 15px;
+            color: #667eea;
+        }
+
+        .message.assistant .message-content p {
+            margin-bottom: 10px;
+        }
+
+        .message.assistant .message-content p:last-child {
+            margin-bottom: 0;
+        }
+
+        .message.assistant .message-content strong {
+            font-weight: 600;
+            color: #444;
+        }
+
+        .message.assistant .message-content ul,
+        .message.assistant .message-content ol {
+            margin: 8px 0;
+            padding-left: 20px;
+        }
+
+        .message.assistant .message-content li {
+            margin-bottom: 4px;
+        }
+
+        .message.assistant .message-content code {
+            background: #f0f0f0;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 13px;
+        }
+
         .message-avatar {
             width: 36px;
             height: 36px;
@@ -388,7 +440,13 @@
 
             const content = document.createElement('div');
             content.className = 'message-content';
-            content.textContent = text;
+            
+            if (role === 'assistant') {
+                // Parse markdown for assistant messages
+                content.innerHTML = parseMarkdown(text);
+            } else {
+                content.textContent = text;
+            }
 
             messageDiv.appendChild(avatar);
             messageDiv.appendChild(content);
@@ -429,6 +487,53 @@
         window.onload = () => {
             messageInput.focus();
         };
+
+        // Simple markdown parser
+        function parseMarkdown(text) {
+            // Escape HTML first
+            let html = text
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+            
+            // Headers (###, ##, #)
+            html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+            html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+            html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+            
+            // Bold (**text**)
+            html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+            
+            // Italic (*text*)
+            html = html.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+            
+            // Inline code (`code`)
+            html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+            
+            // Bullet lists (- item)
+            html = html.replace(/^- (.+)$/gm, '<li>$1</li>');
+            html = html.replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>');
+            
+            // Numbered lists (1. item)
+            html = html.replace(/^\d+\. (.+)$/gm, '<li>$1</li>');
+            
+            // Line breaks for readability - convert double newlines to paragraphs
+            html = html.replace(/\n\n+/g, '</p><p>');
+            html = html.replace(/\n/g, '<br>');
+            
+            // Wrap in paragraph if not already wrapped in block elements
+            if (!html.startsWith('<h') && !html.startsWith('<ul') && !html.startsWith('<ol')) {
+                html = '<p>' + html + '</p>';
+            }
+            
+            // Clean up empty paragraphs
+            html = html.replace(/<p><\/p>/g, '');
+            html = html.replace(/<p><br><\/p>/g, '');
+            html = html.replace(/<br><\/p>/g, '</p>');
+            html = html.replace(/<p><br>/g, '<p>');
+            
+            return html;
+        }
     </script>
 </body>
 </html>

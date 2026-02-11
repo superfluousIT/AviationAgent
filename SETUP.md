@@ -1,24 +1,24 @@
 # AviationAgent
 
-An intelligent aviation information agent built on Azure AI Foundry that leverages the AviationStack API to provide real-time and historical flight data through a simple web application.
+An intelligent aviation information agent built with the Azure AI Agents SDK that leverages the AviationStack API to provide real-time and historical flight data through a simple web application.
 
 ## Overview
 
-AviationAgent is an AI-powered agent designed to deliver comprehensive aviation information through natural language interactions. Built on Microsoft's Azure AI Foundry platform, this agent provides a conversational interface to access global aviation data powered by the AviationStack API.
+AviationAgent is an AI-powered agent designed to deliver comprehensive aviation information through natural language interactions. Built on the Azure AI Agents SDK (new Agents API), this agent provides a conversational interface to access global aviation data powered by the AviationStack API.
 
 ## Features
 
 - **Real-Time Flight Information**: Get current flight status, departure and arrival details
 - **Natural Language Interface**: Ask questions in plain English
 - **Web-Based UI**: Simple and intuitive chat interface
-- **Azure AI Integration**: Powered by Azure OpenAI with function calling
+- **Azure AI Integration**: Powered by Azure AI Agents SDK with function tools
 - **Service Principal Authentication**: Secure enterprise authentication
 - **AviationStack API Integration**: Access to comprehensive flight data
 
 ## Technology Stack
 
 - **Backend**: Python with Flask
-- **AI Platform**: Azure OpenAI (GPT-4)
+- **AI Platform**: Azure AI Projects SDK v2 (`azure-ai-projects`)
 - **Authentication**: Azure Service Principal
 - **API Provider**: AviationStack
 - **Frontend**: HTML/CSS/JavaScript
@@ -29,9 +29,9 @@ Before you begin, ensure you have:
 
 1. **Python 3.8+** installed
 2. **Azure AI Foundry** account with:
-   - Azure OpenAI resource deployed
-   - Service principal credentials (or API key)
-   - GPT-4 (or GPT-3.5-turbo) deployment
+   - An AI project endpoint
+   - Service principal credentials (or managed identity)
+   - Model deployment (e.g., gpt-4o)
 3. **AviationStack API key** (free tier available at [aviationstack.com](https://aviationstack.com))
 
 ## Installation
@@ -76,14 +76,10 @@ Edit `.env` with your credentials:
 AZURE_TENANT_ID=your-tenant-id-here
 AZURE_CLIENT_ID=your-client-id-here
 AZURE_CLIENT_SECRET=your-client-secret-here
-AZURE_SUBSCRIPTION_ID=your-subscription-id-here
-AZURE_RESOURCE_GROUP=your-resource-group-here
-AZURE_PROJECT_NAME=your-project-name-here
 
-# Azure OpenAI Configuration
-AZURE_OPENAI_ENDPOINT=https://your-endpoint.openai.azure.com/
-AZURE_OPENAI_API_KEY=your-api-key-here
-AZURE_OPENAI_DEPLOYMENT_NAME=gpt-4
+# Azure AI Foundry Project
+AZURE_AI_PROJECT_ENDPOINT=https://your-ai-services-account.services.ai.azure.com/api/projects/your-project-name
+AZURE_AI_MODEL_DEPLOYMENT_NAME=gpt-4o
 
 # AviationStack API Configuration
 AVIATIONSTACK_API_KEY=your-aviationstack-api-key-here
@@ -108,15 +104,15 @@ PORT=5000
    - Directory (tenant) ID → `AZURE_TENANT_ID`
 5. Go to **Certificates & secrets** > **New client secret**
 6. Copy the secret value → `AZURE_CLIENT_SECRET`
-7. Assign appropriate roles to your service principal for Azure OpenAI access
+7. Assign appropriate roles to your service principal for Azure AI access
 
-### Azure OpenAI
+### Azure AI Project Endpoint
 
-1. Create an Azure OpenAI resource in [Azure Portal](https://portal.azure.com)
-2. Deploy a model (e.g., GPT-4 or GPT-3.5-turbo)
-3. Get your endpoint from the resource overview → `AZURE_OPENAI_ENDPOINT`
-4. Get your API key from **Keys and Endpoint** section → `AZURE_OPENAI_API_KEY`
-5. Note your deployment name → `AZURE_OPENAI_DEPLOYMENT_NAME`
+1. Go to [Azure AI Foundry](https://ai.azure.com)
+2. Open your project
+2. Deploy a model (e.g., gpt-4o)
+3. Get your project endpoint from the project overview → `AZURE_AI_PROJECT_ENDPOINT`
+4. Note your model deployment name → `AZURE_AI_MODEL_DEPLOYMENT_NAME`
 
 ### AviationStack API
 
@@ -220,9 +216,9 @@ This project is designed to work with free tier services:
 - Real-time and historical data
 - No commercial use
 
-### Azure OpenAI
+### Azure AI
 - Pay-as-you-go pricing applies
-- Consider using GPT-3.5-turbo for lower costs
+- Consider using lower-cost model deployments
 - Implement rate limiting for production use
 
 ## Security Best Practices
@@ -273,9 +269,9 @@ docker run -p 8000:8000 --env-file .env aviation-agent
 - Check that `.env` file is in the same directory as `app.py`
 
 ### "Error processing request"
-- Verify your Azure OpenAI credentials are correct
+- Verify your Azure AI project endpoint and service principal credentials are correct
 - Check that your deployment name matches the one in `.env`
-- Ensure your service principal has access to the Azure OpenAI resource
+- Ensure your service principal has access to the Azure AI project
 
 ### No flight data returned
 - AviationStack free tier has limited requests
@@ -285,7 +281,7 @@ docker run -p 8000:8000 --env-file .env aviation-agent
 ## API Documentation
 
 - [AviationStack API Documentation](https://aviationstack.com/documentation)
-- [Azure OpenAI Documentation](https://learn.microsoft.com/en-us/azure/ai-services/openai/)
+- [Azure AI Agents Documentation](https://learn.microsoft.com/en-us/azure/ai-services/agents/)
 - [Azure AI Foundry Documentation](https://learn.microsoft.com/en-us/azure/ai-foundry/)
 
 ## Contributing
@@ -300,7 +296,7 @@ This project is provided as-is for educational and development purposes.
 
 For issues and questions:
 - Check the [AviationStack FAQ](https://aviationstack.com/faq)
-- Review [Azure OpenAI documentation](https://learn.microsoft.com/en-us/azure/ai-services/openai/)
+- Review [Azure AI Agents documentation](https://learn.microsoft.com/en-us/azure/ai-services/agents/)
 - Open an issue in this repository
 
 ## Acknowledgments

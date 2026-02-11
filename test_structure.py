@@ -54,7 +54,7 @@ def test_aviation_agent_structure():
         print("  ✓ AviationAgent class imported successfully")
         
         # Check for required methods
-        required_methods = ['chat', 'reset_conversation', '_define_tools', '_execute_tool']
+        required_methods = ['chat', 'reset_conversation', '_create_or_update_agent', '_execute_tool_call']
         for method in required_methods:
             assert hasattr(AviationAgent, method), f"Missing {method} method"
         print(f"  ✓ AviationAgent has all required methods")
@@ -161,7 +161,7 @@ def test_requirements():
         with open(req_path, 'r') as f:
             requirements = f.read()
         
-        required_packages = ['Flask', 'python-dotenv', 'requests', 'openai', 'azure-identity']
+        required_packages = ['Flask', 'python-dotenv', 'requests', 'azure-ai-projects', 'azure-identity', 'openai']
         missing_packages = []
         
         for package in required_packages:
