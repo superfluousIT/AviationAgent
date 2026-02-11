@@ -269,7 +269,7 @@ If airport or airline codes are mentioned, use them to search. Common codes incl
 
         except Exception as e:
             logger.exception("Error processing request")
-            return f"Error processing request: {str(e)}"
+            return "Sorry, I encountered an error processing your request. Please try again."
 
     def reset_conversation(self):
         """Reset the conversation by clearing the response chain."""

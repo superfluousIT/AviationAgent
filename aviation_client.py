@@ -6,9 +6,11 @@ specifically for the flights endpoint. It's designed to work with the free tier.
 """
 
 import os
+import logging
 import requests
 from typing import Dict, Any, Optional, List
 
+logger = logging.getLogger(__name__)
 
 class AviationStackClient:
     """Client for interacting with the AviationStack API."""
@@ -51,10 +53,15 @@ class AviationStackClient:
             response.raise_for_status()
             return response.json()
         except requests.RequestException as e:
+            # Sanitize error message to avoid leaking API keys from URLs
+            error_msg = str(e)
+            if self.api_key and self.api_key in error_msg:
+                error_msg = error_msg.replace(self.api_key, "[REDACTED]")
+            logger.error("AviationStack API error: %s", error_msg)
             return {
                 "error": {
                     "code": "api_error",
-                    "message": f"Failed to fetch data from AviationStack: {str(e)}"
+                    "message": "Failed to fetch data from AviationStack. Please try again later."
                 }
             }
     

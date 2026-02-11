@@ -5,10 +5,13 @@ A simple web interface for interacting with the Aviation Agent.
 """
 
 import os
+import logging
 from flask import Flask, render_template, request, jsonify, session
 from dotenv import load_dotenv
 from aviation_agent import AviationAgent
 import secrets
+
+logger = logging.getLogger(__name__)
 
 # Load environment variables
 load_dotenv()
@@ -59,12 +62,12 @@ def chat():
         response = agent.chat(user_message)
         
         return jsonify({
-            'response': response,
-            'session_id': session_id
+            'response': response
         })
         
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        logger.exception("Error in /api/chat")
+        return jsonify({'error': 'An internal error occurred. Please try again.'}), 500
 
 
 @app.route('/api/reset', methods=['POST'])
@@ -78,7 +81,8 @@ def reset():
         return jsonify({'message': 'Conversation reset successfully'})
         
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        logger.exception("Error in /api/reset")
+        return jsonify({'error': 'An internal error occurred. Please try again.'}), 500
 
 
 @app.route('/health')
