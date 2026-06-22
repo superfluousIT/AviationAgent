@@ -221,14 +221,17 @@ If airport or airline codes are mentioned, use them to search. Common codes incl
             # Build the initial response request
             # Note: instructions and tools come from the agent definition;
             # passing them here when an agent reference is set is not allowed.
-            response = self.openai_client.responses.create(
+            create_kwargs = dict(
                 input=user_message,
                 model=self.model_name,
-                previous_response_id=self._previous_response_id,
                 extra_body={
                     "agent": AgentReference(name=self.agent.name).as_dict()
                 },
             )
+            if self._previous_response_id is not None:
+                create_kwargs["previous_response_id"] = self._previous_response_id
+
+            response = self.openai_client.responses.create(**create_kwargs)
 
             # Handle tool-call loop
             for _ in range(self.MAX_TOOL_ROUNDS):
